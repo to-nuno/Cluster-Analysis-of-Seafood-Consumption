@@ -1,43 +1,37 @@
-
-import numpy as np
 import pandas as pd
-import re
+import numpy as np
 
-data2024_html = 'https://www.e-stat.go.jp/stat-search/files?stat_infid=000040297536'
+# ファイルの読み込み
+df2024 = '/content/drive/MyDrive/2024data.xls'
 
-df_2024 = pd.read_excel(data2024_html)
+# 余計な行の削除
+skip_rows = list(range(0, 5)) + list(range(6, 33)) + list(range(86, 91))
 
-# データ全体を表示
-print(df_2024)
+df = pd.read_excel(
+    df2024,
+    skiprows=skip_rows,
+    header=0   # ← 残った最初の行をヘッダーに
+)
 
-# データの上部のみを表示
-print(df_2024.head())
+print(df)
 
-# データの行を表示
-print(df_2024.index)
+# 余計な列の削除
+cols_to_drop = [
+0,2,3,4,5,8,10,12,14,16,18,20,22,24,
+26,28,30,32,34,36,38,40,42,44,46,48,50,
+52,54,56,58,60,62,64,66,74
+]
 
-# データの列を表示
-print(df_2024.columns)
+df = df.drop(df.columns[cols_to_drop], axis=1)
 
-# データファイルの1～8行目までは、ヘッダーとして使用する7行目を除いて読み込みをスキップする。
-# また「全国（人口集中地区）」「全国（人口集中地区以外の地区）」は1965年までの欠損値が大きくあるのでこれもスキップする。
-# 沖縄県は1945年に欠損値がある。列番号16～18を指定して、欠損値の"-"をnp.nanに変換する。
-# スキップしたあとの最初の行はヘッダーとして扱い、また最初の列はDataFrameのindexとして扱う。
-# 行、列の指定はプログラム内では0から数える数値となっている。
-df0 = pd.read_excel('da01.xlsx',skiprows=[0,1,2,3,4,5,7,9,10],header=0,index_col=0,converters={i:lambda x:np.nan if x=="-" else int(x) for i in range(16,19)})
+print(df)
 
-# DataFrameのインデックスを整形する。
-# データファイルでは0000_全国のようにコード_県名なので、
-# _ 以降だけをインデックスとして使用する。
-m = map(lambda l:re.findall(r".*_(.*)",l)[0],df0.index)
-df0 = df0.set_axis(list(m),axis="index")
 
-# DataFrameの列名を整形する。
-# データファイルでは7行目を列名として使用するが、
-# 1920年, 大正9年, (空白), ... となっている。それぞれの意味は、1920の総数、男、女の人口なので、
-# それに合わせた列名になるように修正する。
-column_labels = []
-for i in range(0,len(df0.columns),3):
-  for l in ["総数","男","女"]:
-    column_labels.append(f"{df0.columns[i]}_{l}")
-df0 = df0.set_axis(column_labels,axis="columns")
+# ヘッダーのリネーム
+new_columns = ["県庁所在市等名", "魚介類", "生鮮魚介", "鮮魚", "まぐろ", "あじ", "いわし", "かつお", "かれい", "さけ", "さば", "さんま", "たい", "ぶり", "いか", "たこ", "えび", "かに", "他の鮮魚", "さしみ盛合わせ", "貝類", "あさり", "しじみ", "かき（貝）", "ほたて貝", "他の貝", "塩干魚介", "塩さけ", "たらこ", "しらす干し", "干しあじ", "他の塩干魚介", "魚肉練製品", "揚げかまぼこ", "ちくわ", "かまぼこ", "他の魚肉練製品", "他の魚介加工品", "かつお節・削り節", "魚介の漬物", "魚介の佃煮", "魚介の缶詰", "他の魚介加工品のその他"]
+
+df.columns = new_columns
+
+
+# 編集したデータフレームの表示
+display(df)
